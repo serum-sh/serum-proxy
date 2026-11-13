@@ -1,0 +1,253 @@
+{
+  "protocol_version": 1,
+  "description": "Shared protocol vectors for the serum WebSocket envelope. This file is the source of truth for the wire format: serum and the proxy both conform to it. An optional field with no value is omitted, never null. See protocol.md, 'Serialization contract' and 'Shared vectors and cross-repo parity'.",
+  "vectors": [
+    {
+      "description": "hello: proxy -> serum on connect, advertising supported versions and build version",
+      "frame": {
+        "type": "hello",
+        "protocol_versions_supported": [1],
+        "proxy_build_version": "0.1.0"
+      }
+    },
+    {
+      "description": "hello: serum -> proxy ack of the negotiated version",
+      "frame": {
+        "type": "hello",
+        "protocol_version": 1
+      }
+    },
+    {
+      "description": "heartbeat: proxy -> serum liveness ping",
+      "frame": {
+        "type": "heartbeat",
+        "protocol_version": 1,
+        "uptime_seconds": 12345,
+        "requests_handled_since_last": 17
+      }
+    },
+    {
+      "description": "request: GET with scalar query values; body omitted (None)",
+      "frame": {
+        "type": "request",
+        "protocol_version": 1,
+        "request_id": "019e2d7a444e70ef8250f75c26cc5f1d",
+        "target_service": "prometheus",
+        "method": "GET",
+        "path": "/api/v1/query",
+        "query": {"query": "up", "time": "1700000000"},
+        "headers": {"Accept": "application/json"}
+      }
+    },
+    {
+      "description": "request: list-valued query key serializes as repeated params (match[]=a&match[]=b)",
+      "frame": {
+        "type": "request",
+        "protocol_version": 1,
+        "request_id": "019e2d7a444e70ef8250f75c26cc5f1d",
+        "target_service": "prometheus",
+        "method": "GET",
+        "path": "/api/v1/series",
+        "query": {"match[]": ["up", "process_cpu_seconds_total"]}
+      }
+    },
+    {
+      "description": "request: POST with a JSON body; query/headers omitted",
+      "frame": {
+        "type": "request",
+        "protocol_version": 1,
+        "request_id": "019e2d7a444e70ef8250f75c26cc5f1e",
+        "target_service": "elasticsearch",
+        "method": "POST",
+        "path": "/_search",
+        "body": "{\"query\":{\"match_all\":{}}}"
+      }
+    },
+    {
+      "description": "response: successful backend reply; error and redaction_summary omitted",
+      "frame": {
+        "type": "response",
+        "protocol_version": 1,
+        "request_id": "019e2d7a444e70ef8250f75c26cc5f1d",
+        "is_streaming": false,
+        "chunk_index": 0,
+        "is_final": true,
+        "status_code": 200,
+        "headers": {"Content-Type": "application/json"},
+        "body": "{\"status\":\"success\"}"
+      }
+    },
+    {
+      "description": "response: backend returned a 5xx - still a real backend reply, error stays null/omitted",
+      "frame": {
+        "type": "response",
+        "protocol_version": 1,
+        "request_id": "019e2d7a444e70ef8250f75c26cc5f1d",
+        "is_streaming": false,
+        "chunk_index": 0,
+        "is_final": true,
+        "status_code": 503,
+        "headers": {"Content-Type": "text/plain"},
+        "body": "service unavailable"
+      }
+    },
+    {
+      "description": "response: proxy-level error (allowlist deny); status_code/headers omitted, body empty, error set",
+      "frame": {
+        "type": "response",
+        "protocol_version": 1,
+        "request_id": "019e2d7a444e70ef8250f75c26cc5f1d",
+        "is_streaming": false,
+        "chunk_index": 0,
+        "is_final": true,
+        "body": "",
+        "error": {
+          "code": "403_ALLOWLIST",
+          "message": "path /_bulk not in allowlist",
+          "retryable": false
+        }
+      }
+    },
+    {
+      "description": "response: proxy-level error for an unknown target_service (404_UNKNOWN_SERVICE)",
+      "frame": {
+        "type": "response",
+        "protocol_version": 1,
+        "request_id": "019e2d7a444e70ef8250f75c26cc5f1d",
+        "is_streaming": false,
+        "chunk_index": 0,
+        "is_final": true,
+        "body": "",
+        "error": {
+          "code": "404_UNKNOWN_SERVICE",
+          "message": "target_service kubernetes not configured in this proxy",
+          "retryable": false
+        }
+      }
+    },
+    {
+      "description": "response: a retryable proxy-level error (concurrency cap) sets retryable=true",
+      "frame": {
+        "type": "response",
+        "protocol_version": 1,
+        "request_id": "019e2d7a444e70ef8250f75c26cc5f1d",
+        "is_streaming": false,
+        "chunk_index": 0,
+        "is_final": true,
+        "body": "",
+        "error": {
+          "code": "429_CONCURRENT_REQUESTS",
+          "message": "concurrency cap exceeded for service prometheus",
+          "retryable": true
+        }
+      }
+    },
+    {
+      "description": "response: redaction occurred; redaction_summary populated",
+      "frame": {
+        "type": "response",
+        "protocol_version": 1,
+        "request_id": "019e2d7a444e70ef8250f75c26cc5f1d",
+        "is_streaming": false,
+        "chunk_index": 0,
+        "is_final": true,
+        "status_code": 200,
+        "headers": {"Content-Type": "application/json"},
+        "body": "{\"hits\":[]}",
+        "redaction_summary": {"rules_fired": ["pii-email"], "bytes_redacted": 42}
+      }
+    },
+    {
+      "description": "response: streaming head frame (chunk_index 0) carries status_code/headers, is_final false",
+      "frame": {
+        "type": "response",
+        "protocol_version": 1,
+        "request_id": "019e2d7a444e70ef8250f75c26cc5f1d",
+        "is_streaming": true,
+        "chunk_index": 0,
+        "is_final": false,
+        "status_code": 200,
+        "headers": {"Content-Type": "application/x-ndjson"},
+        "body": "<chunk-0>"
+      }
+    },
+    {
+      "description": "response: streaming non-head frame (chunk_index > 0) OMITS status_code/headers; is_final true terminates",
+      "frame": {
+        "type": "response",
+        "protocol_version": 1,
+        "request_id": "019e2d7a444e70ef8250f75c26cc5f1d",
+        "is_streaming": true,
+        "chunk_index": 1,
+        "is_final": true,
+        "body": "<chunk-1>"
+      }
+    },
+    {
+      "description": "error: out-of-band frame parse failure not tied to a request",
+      "frame": {
+        "type": "error",
+        "protocol_version": 1,
+        "error": {
+          "code": "FRAME_PARSE_FAILED",
+          "message": "unparseable frame on the wire",
+          "retryable": false
+        }
+      }
+    }
+  ],
+  "must_reject": [
+    {
+      "description": "unknown frame type must not silently degrade",
+      "frame": {"type": "shutdown", "protocol_version": 1}
+    },
+    {
+      "description": "post-handshake request pinned to protocol_version 1; a v2 frame is rejected at the deserialize boundary",
+      "frame": {
+        "type": "request",
+        "protocol_version": 2,
+        "request_id": "019e2d7a444e70ef8250f75c26cc5f1d",
+        "target_service": "prometheus",
+        "method": "GET",
+        "path": "/api/v1/query"
+      }
+    },
+    {
+      "description": "post-handshake response pinned to protocol_version 1; a v2 frame is rejected",
+      "frame": {
+        "type": "response",
+        "protocol_version": 2,
+        "request_id": "019e2d7a444e70ef8250f75c26cc5f1d"
+      }
+    },
+    {
+      "description": "unknown field is rejected (deny_unknown_fields / extra=forbid) so a new field cannot slip into one repo unnoticed",
+      "frame": {
+        "type": "heartbeat",
+        "protocol_version": 1,
+        "uptime_seconds": 1,
+        "requests_handled_since_last": 0,
+        "stowaway": true
+      }
+    },
+    {
+      "description": "method is closed to GET|POST; DELETE is rejected at deserialize",
+      "frame": {
+        "type": "request",
+        "protocol_version": 1,
+        "request_id": "019e2d7a444e70ef8250f75c26cc5f1d",
+        "target_service": "prometheus",
+        "method": "DELETE",
+        "path": "/api/v1/query"
+      }
+    },
+    {
+      "description": "error code is a closed set; an unknown code is rejected",
+      "frame": {
+        "type": "error",
+        "protocol_version": 1,
+        "error": {"code": "999_UNKNOWN", "message": "x"}
+      }
+    }
+  ]
+}

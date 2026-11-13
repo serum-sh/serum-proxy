@@ -1,0 +1,41 @@
+[package]
+name = "serum-proxy"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "signal", "sync", "time", "net", "io-util"] }
+tokio-tungstenite = { version = "0.24", features = ["rustls-tls-webpki-roots"] }
+futures-util = "0.3"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "stream"] }
+axum = "0.7"
+tower-http = { version = "0.6", features = ["trace"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_yaml = "0.9"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+thiserror = "1"
+anyhow = "1"
+globset = "0.4"
+clap = { version = "4", features = ["derive", "env"] }
+bytes = "1"
+regex = "1"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full", "test-util"] }
+tempfile = "3"
+
+[lints.rust]
+unsafe_code = "forbid"
+
+# Default clippy groups stay on; add single lints here.
+[lints.clippy]
+allow_attributes = "warn"
+allow_attributes_without_reason = "warn"
+cast_possible_truncation = "warn"
+cast_possible_wrap = "warn"
+cast_sign_loss = "warn"
+dbg_macro = "warn"
+doc_markdown = "warn"
+todo = "warn"

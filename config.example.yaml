@@ -1,0 +1,40 @@
+# serum proxy configuration.
+#
+# Mount this file into the container at /app/config.yaml.
+# Provide SERUM_PROXY_TOKEN in the environment.
+# Any ${VAR} reference below is interpolated from the environment at startup;
+# a missing var aborts the proxy.
+
+proxy:
+  serum_wss_url: "wss://gateway.example.com/v1/proxy"
+  log_level: "INFO"
+  # admin_bind: "127.0.0.1:8088"
+  reconnect_max_backoff_secs: 60
+  # Permit a ws:// (no TLS) `serum_wss_url`. Off by default, and serum will not serve non-TLS.
+  # Convenience for dev in local or docker network.
+  allow_insecure_ws: false
+
+services:
+  - type: "prometheus"
+    base_url: "http://prometheus:9090"
+    max_concurrent_requests: 10
+    # path_allowlist:    # makes the built-in list shorter; `*` matches one segment (see README: Built-in allowlists)
+    #   - "/api/v1/query"
+    #   - "/api/v1/query_range"
+
+  - type: "elasticsearch"
+    base_url: "http://elasticsearch:9200"
+    headers:
+      Authorization: "Basic ${ES_TOKEN}"
+    max_concurrent_requests: 5
+    # path_allowlist:    # makes the built-in list shorter; `*` matches one segment (see README: Built-in allowlists)
+
+  # - type: "kubernetes"
+  #   # In-cluster API server; the address must match the CA subject so TLS verifies.
+  #   base_url: "https://kubernetes.default.svc"
+  #   # PEM CA bundle the backend's cert is verified against. When set, client will
+  #   # trust this CA. In-cluster the kubelet mounts it at the path below.
+  #   tls_ca_cert: "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+  #   # Bearer token injected as Authorization, re-read on a short TTL since the
+  #   # kubelet rotates the ServiceAccount token mounted here.
+  #   auth_token_file: "/var/run/secrets/kubernetes.io/serviceaccount/token"

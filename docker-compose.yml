@@ -1,0 +1,50 @@
+# Two ways to run the proxy:
+#   docker compose up proxy                             dev: cargo run, source mounted
+#   docker compose --profile release up proxy-release   release: release binary
+
+services:
+  proxy:
+    build:
+      context: .
+      target: dev
+
+    command: ["cargo", "run", "--", "--config", "/app/config.dev.yaml"]
+    # .env holds SERUM_PROXY_TOKEN, which serum issues per org.
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      # SERUM_PROXY_TOKEN is issued per org and verified server-side on connect.
+      # SERUM_PROXY_TOKEN: "sk-serum-01a0******"
+
+      RUST_LOG: "debug"
+    volumes:
+      # Source bind mount, then named volumes shadow target/ and the cargo
+      # registry so the container's Linux build never mixes with the host tree.
+      - .:/app
+      - proxy-cargo-cache:/usr/local/cargo/registry
+      - proxy-target-cache:/app/target
+    # Operator endpoints (/healthz, /egress), host-local only.
+    ports:
+      - "127.0.0.1:8088:8088"
+
+  proxy-release:
+    profiles: ["release"]
+    build:
+      context: .
+      target: runtime
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      RUST_LOG: "info"
+    volumes:
+      - ./config.dev.yaml:/app/config.yaml:ro
+    # Same host-local operator endpoints. Stop `proxy` first; both bind 8088.
+    ports:
+      - "127.0.0.1:8088:8088"
+
+# Container-only build caches (not bind-mounted to any host path).
+volumes:
+  proxy-cargo-cache:
+  proxy-target-cache:

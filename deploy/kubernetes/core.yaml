@@ -1,0 +1,98 @@
+# serum proxy: core manifest template.
+# See README.md in this directory for the marker contract and apply order.
+# Resources: Namespace, ConfigMap, Deployment. Secret with the token is created out of band.
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: "%{namespace}"
+  labels:
+    app.kubernetes.io/name: serum-proxy
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: serum-proxy
+  namespace: "%{namespace}"
+  labels:
+    app.kubernetes.io/name: serum-proxy
+data:
+  # Mounted at /app/config.yaml. `${VAR}` references in it are interpolated
+  # from the container environment at startup, so every var it names must
+  # reach the pod through the serum-proxy Secret (see envFrom below).
+  config.yaml: |
+    %{config_yaml}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: serum-proxy
+  namespace: "%{namespace}"
+  labels:
+    app.kubernetes.io/name: serum-proxy
+spec:
+  replicas: 1
+  # Recreate: one proxy connection per org for now
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: serum-proxy
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: serum-proxy
+    spec:
+      # serum-proxy when the Kubernetes connector is selected (rbac.yaml
+      # creates it), `default` otherwise.
+      serviceAccountName: "%{service_account}"
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: proxy
+          image: "%{image}"
+          args: ["--config", "/app/config.yaml"]
+          env:
+            - name: SERUM_PROXY_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: serum-proxy
+                  key: token
+          envFrom:
+            # credentials are referenced as `${VAR}` in config.yaml
+            - secretRef:
+                name: serum-proxy
+          ports:
+            - name: admin
+              containerPort: 8088
+          livenessProbe:
+            # /healthz reports connection state but always answers 200
+            httpGet:
+              path: /healthz
+              port: 8088
+            initialDelaySeconds: 5
+            periodSeconds: 30
+            timeoutSeconds: 5
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+          volumeMounts:
+            - name: config
+              mountPath: /app/config.yaml
+              subPath: config.yaml
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: serum-proxy

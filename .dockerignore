@@ -1,0 +1,6 @@
+# Allow-list: send only what the Dockerfile copies.
+*
+!Cargo.toml
+!Cargo.lock
+!src
+!tests

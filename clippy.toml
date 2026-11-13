@@ -1,0 +1,5 @@
+# Proper names that `doc_markdown` accepts without backticks. ".." keeps the clippy defaults.
+doc-valid-idents = ["..", "UUIDv7", "ServiceAccount", "ConfigMap"]
+
+# `unwrap_used` is on for src/; this keeps unwrap legal in `#[cfg(test)]` code there.
+allow-unwrap-in-tests = true

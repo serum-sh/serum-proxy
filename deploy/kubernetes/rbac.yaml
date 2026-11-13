@@ -1,0 +1,40 @@
+# serum proxy: kubernetes connector RBAC template.
+# See README.md in this directory for the marker contract and apply order.
+# Applied only when the Kubernetes connector is selected. The grant is read-only.
+# Cluster-scoped objects are named after the namespace and survive its delete.
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: serum-proxy
+  namespace: "%{namespace}"
+  labels:
+    app.kubernetes.io/name: serum-proxy
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: "%{namespace}-proxy-read"
+  labels:
+    app.kubernetes.io/name: serum-proxy
+rules:
+  # Matches what the proxy's Kubernetes path allowlist admits: the namespaced
+  # pods and events list endpoints.
+  - apiGroups: [""]
+    resources: ["pods", "events"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: "%{namespace}-proxy-read"
+  labels:
+    app.kubernetes.io/name: serum-proxy
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: "%{namespace}-proxy-read"
+subjects:
+  - kind: ServiceAccount
+    name: serum-proxy
+    namespace: "%{namespace}"

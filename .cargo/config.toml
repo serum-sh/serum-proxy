@@ -1,0 +1,10 @@
+[build]
+# Limit parallel codegen so the linker phase doesn't OOM in memory-constrained Docker VMs
+jobs = 2
+
+[profile.dev]
+# Line-tables-only debug info keeps backtraces readable while cutting linker memory
+debug = "line-tables-only"
+
+[profile.test]
+debug = "line-tables-only"
