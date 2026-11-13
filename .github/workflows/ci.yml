@@ -1,0 +1,43 @@
+# Checks for pull requests and for pushes to main.
+#
+# Security:
+# - The trigger is `pull_request`. Never use `pull_request_target` or `workflow_run`. For a PR from
+#   a fork, GitHub gives a read-only token and no secrets.
+# - This workflow uses no secrets.
+# - All permissions are off by default. The job gets only `contents: read`.
+# - Actions are pinned to a full commit SHA. Dependabot updates the pins.
+# - No caches, so a run cannot poison the cache of a later run.
+
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions: {}
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: check
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: fmt
+        run: make fmt-check
+
+      - name: lint
+        run: make lint
+
+      - name: test
+        run: make test

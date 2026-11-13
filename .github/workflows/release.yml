@@ -1,0 +1,73 @@
+# Builds the runtime image and pushes it to ghcr.io when a tag `vX.Y.Z` is pushed.
+#
+# Security:
+# - A tag ruleset lets only admins create `v*` tags.
+# - The `release` environment needs an approval before the job starts.
+# - The job token can only read the repo and write packages. This workflow uses no other secret.
+# - The only action is `actions/checkout`, pinned to a full commit SHA. No third-party code runs
+#   next to the token.
+# - No caches, so the image cannot use a poisoned cache.
+# - The build runs before `docker login`, so the build never sees the registry credentials.
+# - The tag goes to the scripts through `env`, never through `${{ }}` in `run`, and is checked
+#   against a strict pattern.
+
+name: release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions: {}
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/serum-sh/serum-proxy
+
+jobs:
+  image:
+    name: image
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    environment: release
+    permissions:
+      contents: read
+      packages: write # push the image to ghcr.io
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check tag
+        id: tag
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Tag '$TAG' is not vX.Y.Z"
+            exit 1
+          fi
+          version="${TAG#v}"
+          if ! grep -qx "version = \"$version\"" Cargo.toml; then
+            echo "::error::Cargo.toml version is not $version"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        env:
+          VERSION: ${{ steps.tag.outputs.version }}
+        run: docker build --platform linux/amd64 --target runtime --tag "$IMAGE:$VERSION" .
+
+      - name: Push
+        env:
+          VERSION: ${{ steps.tag.outputs.version }}
+          TOKEN: ${{ github.token }}
+        run: |
+          printf '%s' "$TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          docker push "$IMAGE:$VERSION"
+          docker logout ghcr.io
+          digest="$(docker inspect --format '{{index .RepoDigests 0}}' "$IMAGE:$VERSION")"
+          echo "Pushed \`$digest\`" >> "$GITHUB_STEP_SUMMARY"
