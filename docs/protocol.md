@@ -90,10 +90,11 @@ reply or a proxy-level error - never both:
 | `error` | object, optional | Typed proxy-level error (see "Error codes"). Mutually exclusive with a backend reply. |
 | `redaction_summary` | object, optional | `{rules_fired: [string], bytes_redacted: int}`. Present only when the proxy redacted bytes from `body`. The current proxy doesn't set it. |
 
-### error (either direction)
+### error (proxy -> serum)
 
-An out-of-band protocol error not tied to a specific request (malformed frame, heartbeat
-violation, version trouble). Per-request failures use `response.error` instead.
+An out-of-band protocol error not tied to a specific request, for example a malformed frame from
+serum. Per-request failures use `response.error` instead. serum does not send `error` frames; it
+closes the WebSocket with a close code.
 
 | field | type | notes |
 |---|---|---|
@@ -146,7 +147,7 @@ A closed set. The proxy emits them in `response.error` (per-request) or in an `e
 | `413_BODY_LIMIT` | Upstream response exceeded 5 MB | no |
 | `429_CONCURRENT_REQUESTS` | Per-service concurrency cap exceeded | yes |
 | `502_BACKEND_UNREACHABLE` | Backend refused / DNS / network unreachable | varies |
-| `504_TIMEOUT` | Upstream exceeded the 15s timeout | varies |
+| `504_TIMEOUT` | Upstream exceeded the 15s timeout | yes |
 | `PROXY_DISCONNECTED` | Tunnel dropped mid-request | yes |
 | `VERSION_MISMATCH` | No protocol-version overlap at handshake | no |
 | `FRAME_PARSE_FAILED` | Malformed / unknown-shape frame on the wire | no |
