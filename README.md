@@ -1,6 +1,6 @@
 # serum proxy
 
-Open-source, customer-deployed proxy for serum. It facilitates communication from serum, especially in behind-firewall scenarios.
+Open-source, customer-deployed proxy for [serum](https://serum.sh). It lets serum read from backends in your network through an outbound connection, so you do not open inbound ports.
 
 The proxy holds one long-lived outbound WebSocket to the serum service. The service sends HTTP-shaped envelopes over the tunnel; the proxy runs them against locally-configured backends (Prometheus, Elasticsearch, Kubernetes, more...) and returns the responses. See [Trust model](#trust-model) for what serum can and cannot do through the proxy.
 
@@ -18,6 +18,12 @@ Replace `<public-image>` with the public image path (TBD).
 
    ```sh
    export SERUM_PROXY_TOKEN=<token>
+   ```
+
+   The example config also reads `ES_TOKEN` for the Elasticsearch `Authorization` header (`Basic ${ES_TOKEN}`). Set it, or remove the Elasticsearch service from `config.yaml` and the `-e ES_TOKEN` line below:
+
+   ```sh
+   export ES_TOKEN=<base64 of user:password>
    ```
 
 3. Run the image:
@@ -49,12 +55,18 @@ Then do the steps in [Public Container Image](#public-container-image), with `se
 
 ## Operator endpoints
 
-Both bind to `proxy.admin_bind` from `config.yaml`. Left unset it is `SERUM_ADMIN_BIND` (the image sets `0.0.0.0:8088`), otherwise `127.0.0.1:8088`. These are internal and for the cluster operator. They are not exposed to serum.
+Both endpoints bind to the first address that is set:
 
-| Path       | Purpose                                                                                       |
-|------------|-----------------------------------------------------------------------------------------------|
-| `/healthz` | WS connection state, seconds since last frame, configured services. For Docker healthchecks.  |
-| `/egress`  | Last N (default 200) requests, also guardrail denials: target, status, bytes. No bodies.      |
+1. `proxy.admin_bind` in `config.yaml`.
+2. The `SERUM_ADMIN_BIND` environment variable. The image sets it to `0.0.0.0:8088`.
+3. `127.0.0.1:8088`.
+
+These endpoints are internal and for the cluster operator. They are not exposed to serum.
+
+| Path       | Purpose                                                                                                 |
+|------------|---------------------------------------------------------------------------------------------------------|
+| `/healthz` | WS connection state, seconds since last frame, configured services. For liveness probes and monitoring. |
+| `/egress`  | Last N (default 200) requests, also guardrail denials: target, status, bytes. No bodies.                |
 
 ## Shutdown
 
