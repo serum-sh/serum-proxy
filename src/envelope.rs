@@ -175,7 +175,8 @@ pub struct RequestFrame {
 /// - Proxy-level error: `error` is set (typed code + message); `status_code`
 ///   and `body` are not meaningful and consumers should ignore them.
 ///
-/// MVP always emits one frame with `is_streaming=false, is_final=true`; streaming is TODO.
+/// The proxy always sends one frame with `is_streaming=false, is_final=true`. The streaming fields
+/// are for a later version.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
 pub struct ResponseFrame {
@@ -232,8 +233,8 @@ pub fn is_valid_request_id(s: &str) -> bool {
 impl ResponseFrame {
     /// Single-chunk success response: status, headers and body in one final frame.
     ///
-    /// Holds the MVP invariant (`is_streaming=false, chunk_index=0, is_final=true`)
-    /// so callers never restate it. See `check_head_fields` for the read-side rule.
+    /// Always a single frame (`is_streaming=false, chunk_index=0, is_final=true`), so callers
+    /// never set these fields. See `check_head_fields` for the read-side rule.
     pub fn reply(
         request_id: String,
         status: u16,
@@ -256,8 +257,8 @@ impl ResponseFrame {
 
     /// Single-chunk error response: no status or headers, just the typed error.
     ///
-    /// Same MVP invariant as `reply`; used for every rejection that still owes
-    /// the peer a per-request response frame.
+    /// Also a single frame, like `reply`. Used for every rejection that still owes the peer a
+    /// per-request response frame.
     pub fn error(request_id: String, error: FrameError) -> Self {
         Self {
             protocol_version: ProtocolV1,

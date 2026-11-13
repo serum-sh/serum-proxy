@@ -1,6 +1,6 @@
 //! In-memory ring buffer of recently forwarded requests.
 //!
-//! Operator-facing transparency artefact. Response bodies
+//! Operator-facing transparency artifact. Response bodies
 //! are explicitly NOT retained.
 
 use std::collections::VecDeque;

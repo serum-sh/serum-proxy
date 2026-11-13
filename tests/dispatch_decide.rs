@@ -62,9 +62,8 @@ fn valid_request_to_known_service_forwards() {
 
 #[test]
 fn unknown_service_rejects_as_404_not_403() {
-    // An unknown target_service must surface as 404_UNKNOWN_SERVICE.
-    // The original bug emitted 403_ALLOWLIST here; lock the path from a missing
-    // registry entry to the rejection verdict.
+    // An unknown target_service must surface as 404_UNKNOWN_SERVICE, not 403_ALLOWLIST.
+    // Lock the path from a missing registry entry to the rejection verdict.
     let registry = ServiceRegistry::new();
     match decide(Ok(request(VALID_REQUEST_ID, "nope")), &registry) {
         Action::Reject(resp) => {

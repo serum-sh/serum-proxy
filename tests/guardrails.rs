@@ -152,7 +152,7 @@ async fn kubernetes_admits_in_scope_and_rejects_out_of_scope() {
         ),
         "a named pod path must be denied"
     );
-    // A cluster-scoped resource (out of scope for cut 1) is denied.
+    // A cluster-scoped resource is denied.
     assert!(
         matches!(
             g.admit(&HttpMethod::Get, "/api/v1/nodes").await,
@@ -187,7 +187,7 @@ async fn kubernetes_rejects_non_get_method() {
 
 #[tokio::test]
 async fn kubernetes_non_get_yields_405_frame_without_forwarding() {
-    //end-to-end through the executor, POST check for 405_METHOD.
+    // End-to-end through the executor, POST check for 405_METHOD.
     // base_url is a refused port, so a forwarded dial would return 502 BACKEND_UNREACHABLE.
     let s = svc("http://127.0.0.1:1", ServiceKind::Kubernetes, 4);
     let resolved = Arc::new(ResolvedService::from_config(&s).unwrap());

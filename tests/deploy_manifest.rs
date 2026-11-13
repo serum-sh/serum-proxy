@@ -356,7 +356,7 @@ fn cluster_scoped_objects_carry_the_teardown_label() {
         if doc["metadata"]["namespace"].is_null() {
             assert_eq!(
                 doc["metadata"]["labels"]["app.kubernetes.io/name"], "serum-proxy",
-                "unlabelled cluster-scoped object: {:?}",
+                "unlabeled cluster-scoped object: {:?}",
                 doc["kind"],
             );
         }

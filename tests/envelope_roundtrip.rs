@@ -263,7 +263,7 @@ fn reply_holds_single_chunk_success_shape() {
         headers,
         "{}".into(),
     );
-    // MVP invariant: one final, non-streaming, first-chunk frame.
+    // Single frame: final, non-streaming, first chunk.
     assert!(!f.is_streaming);
     assert_eq!(f.chunk_index, 0);
     assert!(f.is_final);

@@ -49,5 +49,5 @@ One row in the egress panel: identity (request_id, target_service, method, strip
 _Avoid_: record, log line.
 
 **Redaction / RedactionSummary**:
-What the proxy stripped from a response body before forwarding (rules fired, bytes removed); surfaced to the egress panel and the serum-side view.
+Reserved for a later version; the proxy does not redact. The wire field `redaction_summary` is for what the proxy strips from a response body before forwarding (rules fired, bytes removed).
 _Avoid_: scrubbing, sanitization, masking.

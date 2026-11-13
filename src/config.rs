@@ -208,7 +208,7 @@ where
 /// Recursive worker for `interpolate_value`: substitute `${VAR}` in the parsed tree.
 ///
 /// Walks sequences and mappings; leaves non-string scalars unchanged. Returns `MissingEnv(key)` on the
-/// first unresolved variable so the perator gets a named error rather than a silent empty string.
+/// first unresolved variable so the operator gets a named error rather than a silent empty string.
 fn interpolate_walk<F>(
     value: &mut serde_yaml::Value,
     re: &Regex,

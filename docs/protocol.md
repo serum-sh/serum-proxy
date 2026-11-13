@@ -32,7 +32,7 @@ type in {"hello", "heartbeat", "request", "response", "error"}
   `hello` carrying that `protocol_version`. If the intersection is empty serum closes the
   WebSocket with close code `4001` (UNSUPPORTED_PROTOCOL). Mid-session version change is not
   supported.
-- Evolution is Pattern A (fork on bump): v2 gets a parallel set of frame types alongside v1.
+- A version bump forks the frame types: v2 gets a parallel set of frame types alongside v1.
 
 ## Serialization contract
 
@@ -81,14 +81,14 @@ reply or a proxy-level error - never both:
 | `type` | `"response"` | |
 | `protocol_version` | `1` | |
 | `request_id` | string | Matches the originating `request`. |
-| `is_streaming` | bool | Describes the whole response, not this frame. `false` => single frame total. MVP always `false`. |
+| `is_streaming` | bool | Describes the whole response, not this frame. `false` => single frame total. The current proxy always sends `false`. |
 | `chunk_index` | int | `0` for the head frame; increments per chunk when streaming. |
 | `is_final` | bool | `true` terminates the response, always - including error responses. |
 | `status_code` | int, optional | Set on the head frame (`chunk_index == 0`) only. Omitted on later chunks. |
 | `headers` | object, optional | Head frame only, like `status_code`. |
 | `body` | string | Always present (may be empty). |
 | `error` | object, optional | Typed proxy-level error (see "Error codes"). Mutually exclusive with a backend reply. |
-| `redaction_summary` | object, optional | `{rules_fired: [string], bytes_redacted: int}`. Present only when the proxy redacted bytes from `body`. |
+| `redaction_summary` | object, optional | `{rules_fired: [string], bytes_redacted: int}`. Present only when the proxy redacted bytes from `body`. The current proxy doesn't set it. |
 
 ### error (either direction)
 

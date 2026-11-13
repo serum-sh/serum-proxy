@@ -67,7 +67,7 @@ kubectl delete clusterrole,clusterrolebinding -l app.kubernetes.io/name=serum-pr
 - The proxy dials out and never accepts inbound connections, so there is no
   Service and no Ingress. It needs outbound TCP 443 to the serum gateway;
   clusters with a default-deny egress policy need an allowance for it. The
-  connection does not honour `HTTPS_PROXY`.
+  connection does not honor `HTTPS_PROXY`.
 - The ConfigMap is mounted with `subPath`, so an edit to it does not reach a
   running pod. After changing configuration:
   `kubectl -n serum rollout restart deployment/serum-proxy`.
