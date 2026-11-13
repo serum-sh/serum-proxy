@@ -1,10 +1,10 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to coding agents when working with code in this repository.
 
 This repository is the open-source, customer-deployed proxy for serum.
 
-## Claude Code Workflow
+## Workflow
 
 - When asked for a commit message: Keep it short and simple, don't use filler words, mention important points (and not every small detail). The commit details should be a bullet list, one line per bullet.
 
