@@ -20,7 +20,7 @@ use serum_proxy::{admin, config, egress, executor, logging, session};
 struct Cli {
     #[arg(long, default_value = "/app/config.yaml")]
     config: PathBuf,
-    #[arg(long, env = "SERUM_PROXY_TOKEN")]
+    #[arg(long, env = "SERUM_PROXY_TOKEN", hide_env_values = true)]
     token: String,
 }
 
