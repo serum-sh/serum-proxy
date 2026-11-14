@@ -1,4 +1,4 @@
-FROM rust:1.95-slim-bookworm@sha256:d7482085ff5b415f84dba5647ae71606650bdef00db7aeb69f4b3d170c3e4082 AS builder
+FROM rust:1.99-slim-bookworm@sha256:f2c004e3d2d8b547e8cf7ffbc29205385f4e71d23e53e4e383065db5e9f822cd AS builder
 WORKDIR /build
 RUN apt-get update \
     && apt-get install -y --no-install-recommends pkg-config ca-certificates \
@@ -19,14 +19,14 @@ RUN touch src/main.rs && cargo build --release --locked
 
 # Dev toolchain: rustfmt + clippy (omitted by the slim image) and pkg-config
 # baked in, so fmt/lint work and no apt runs per call.
-FROM rust:1.95-slim-bookworm@sha256:d7482085ff5b415f84dba5647ae71606650bdef00db7aeb69f4b3d170c3e4082 AS toolchain
+FROM rust:1.99-slim-bookworm@sha256:f2c004e3d2d8b547e8cf7ffbc29205385f4e71d23e53e4e383065db5e9f822cd AS toolchain
 RUN apt-get update \
     && apt-get install -y --no-install-recommends pkg-config ca-certificates \
     && rm -rf /var/lib/apt/lists/* \
     && rustup component add rustfmt clippy
 WORKDIR /app
 
-FROM rust:1.95-slim-bookworm@sha256:d7482085ff5b415f84dba5647ae71606650bdef00db7aeb69f4b3d170c3e4082 AS dev
+FROM rust:1.99-slim-bookworm@sha256:f2c004e3d2d8b547e8cf7ffbc29205385f4e71d23e53e4e383065db5e9f822cd AS dev
 WORKDIR /app
 RUN apt-get update \
     && apt-get install -y --no-install-recommends pkg-config ca-certificates \
