@@ -1,6 +1,4 @@
-# syntax=docker/dockerfile:1.7
-
-FROM rust:1.95-slim-bookworm AS builder
+FROM rust:1.95-slim-bookworm@sha256:d7482085ff5b415f84dba5647ae71606650bdef00db7aeb69f4b3d170c3e4082 AS builder
 WORKDIR /build
 RUN apt-get update \
     && apt-get install -y --no-install-recommends pkg-config ca-certificates \
@@ -21,14 +19,14 @@ RUN touch src/main.rs && cargo build --release --locked
 
 # Dev toolchain: rustfmt + clippy (omitted by the slim image) and pkg-config
 # baked in, so fmt/lint work and no apt runs per call.
-FROM rust:1.95-slim-bookworm AS toolchain
+FROM rust:1.95-slim-bookworm@sha256:d7482085ff5b415f84dba5647ae71606650bdef00db7aeb69f4b3d170c3e4082 AS toolchain
 RUN apt-get update \
     && apt-get install -y --no-install-recommends pkg-config ca-certificates \
     && rm -rf /var/lib/apt/lists/* \
     && rustup component add rustfmt clippy
 WORKDIR /app
 
-FROM rust:1.95-slim-bookworm AS dev
+FROM rust:1.95-slim-bookworm@sha256:d7482085ff5b415f84dba5647ae71606650bdef00db7aeb69f4b3d170c3e4082 AS dev
 WORKDIR /app
 RUN apt-get update \
     && apt-get install -y --no-install-recommends pkg-config ca-certificates \
@@ -37,7 +35,7 @@ ENV RUST_LOG=debug
 ENV SERUM_ADMIN_BIND=0.0.0.0:8088
 CMD ["cargo", "run", "--", "--config", "/app/config.yaml"]
 
-FROM debian:bookworm-slim AS runtime
+FROM debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc AS runtime
 LABEL org.opencontainers.image.source="https://github.com/serum-sh/serum-proxy" \
       org.opencontainers.image.licenses="Apache-2.0"
 RUN apt-get update \
