@@ -36,8 +36,6 @@ services:
     env_file:
       - path: .env
         required: false
-    environment:
-      RUST_LOG: "info"
     volumes:
       - ./config.dev.yaml:/app/config.yaml:ro
     # Same host-local operator endpoints. Stop `proxy` first; both bind 8088.

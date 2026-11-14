@@ -48,7 +48,6 @@ USER serum
 WORKDIR /app
 COPY --from=builder /build/target/release/serum-proxy /usr/local/bin/serum-proxy
 
-ENV RUST_LOG=info
 ENV SERUM_ADMIN_BIND=0.0.0.0:8088
 EXPOSE 8088
 ENTRYPOINT ["/usr/local/bin/serum-proxy"]
