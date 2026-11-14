@@ -1,8 +1,13 @@
-# Builds the runtime image and pushes it to ghcr.io when a tag `vX.Y.Z` is pushed.
+# Builds the runtime image for linux/amd64 and linux/arm64 and pushes it to ghcr.io when a tag
+# `vX.Y.Z` is pushed.
+#
+# Each arch builds natively on its own runner and pushes `X.Y.Z-<arch>`. Then `manifest` joins the
+# two images into the multi-arch tag `X.Y.Z`.
 #
 # Security:
 # - A tag ruleset lets only admins create `v*` tags.
-# - The `release` environment needs an approval before the job starts.
+# - The `release` environment needs an approval before the `image` jobs start. One approval starts
+#   both. `manifest` starts only after both `image` jobs succeed.
 # - The job token can only read the repo and write packages. This workflow uses no other secret.
 # - The only action is `actions/checkout`, pinned to a full commit SHA. No third-party code runs
 #   next to the token.
@@ -27,21 +32,21 @@ env:
   IMAGE: ghcr.io/serum-sh/serum-proxy
 
 jobs:
-  image:
-    name: image
+  tag:
+    name: tag
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
-    environment: release
+    timeout-minutes: 5
     permissions:
       contents: read
-      packages: write # push the image to ghcr.io
+    outputs:
+      version: ${{ steps.check.outputs.version }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
       - name: Check tag
-        id: tag
+        id: check
         env:
           TAG: ${{ github.ref_name }}
         run: |
@@ -56,18 +61,62 @@ jobs:
           fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
+  image:
+    name: image ${{ matrix.arch }}
+    needs: tag
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    environment: release
+    permissions:
+      contents: read
+      packages: write # push the image to ghcr.io
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
       - name: Build
         env:
-          VERSION: ${{ steps.tag.outputs.version }}
-        run: docker build --platform linux/amd64 --target runtime --tag "$IMAGE:$VERSION" .
+          ARCH: ${{ matrix.arch }}
+          VERSION: ${{ needs.tag.outputs.version }}
+        run: docker build --platform "linux/$ARCH" --target runtime --tag "$IMAGE:$VERSION-$ARCH" .
 
       - name: Push
         env:
-          VERSION: ${{ steps.tag.outputs.version }}
+          ARCH: ${{ matrix.arch }}
+          VERSION: ${{ needs.tag.outputs.version }}
           TOKEN: ${{ github.token }}
         run: |
           printf '%s' "$TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
-          docker push "$IMAGE:$VERSION"
+          docker push "$IMAGE:$VERSION-$ARCH"
           docker logout ghcr.io
-          digest="$(docker inspect --format '{{index .RepoDigests 0}}' "$IMAGE:$VERSION")"
+          digest="$(docker inspect --format '{{index .RepoDigests 0}}' "$IMAGE:$VERSION-$ARCH")"
           echo "Pushed \`$digest\`" >> "$GITHUB_STEP_SUMMARY"
+
+  manifest:
+    name: manifest
+    needs: [tag, image]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      packages: write # push the multi-arch tag to ghcr.io
+    steps:
+      - name: Push
+        env:
+          VERSION: ${{ needs.tag.outputs.version }}
+          TOKEN: ${{ github.token }}
+        run: |
+          printf '%s' "$TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          docker buildx imagetools create --tag "$IMAGE:$VERSION" \
+            "$IMAGE:$VERSION-amd64" "$IMAGE:$VERSION-arm64"
+          digest="$(docker buildx imagetools inspect --format '{{.Manifest.Digest}}' \
+            "$IMAGE:$VERSION")"
+          docker logout ghcr.io
+          echo "Pushed \`$IMAGE@$digest\`" >> "$GITHUB_STEP_SUMMARY"
