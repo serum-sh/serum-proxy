@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 
-FROM rust:1.95-slim-bookworm AS builder
+FROM rust:1.98-slim-bookworm AS builder
 WORKDIR /build
 RUN apt-get update \
     && apt-get install -y --no-install-recommends pkg-config ca-certificates \
@@ -21,14 +21,14 @@ RUN touch src/main.rs && cargo build --release --locked
 
 # Dev toolchain: rustfmt + clippy (omitted by the slim image) and pkg-config
 # baked in, so fmt/lint work and no apt runs per call.
-FROM rust:1.95-slim-bookworm AS toolchain
+FROM rust:1.98-slim-bookworm AS toolchain
 RUN apt-get update \
     && apt-get install -y --no-install-recommends pkg-config ca-certificates \
     && rm -rf /var/lib/apt/lists/* \
     && rustup component add rustfmt clippy
 WORKDIR /app
 
-FROM rust:1.95-slim-bookworm AS dev
+FROM rust:1.98-slim-bookworm AS dev
 WORKDIR /app
 RUN apt-get update \
     && apt-get install -y --no-install-recommends pkg-config ca-certificates \
