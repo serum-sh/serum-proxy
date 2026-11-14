@@ -18,22 +18,23 @@ use serum_proxy::{admin, config, egress, executor, logging, session};
 #[derive(Parser, Debug)]
 #[command(version, about = "serum outbound incident-response proxy")]
 struct Cli {
+    /// Path to the config file.
     #[arg(long, default_value = "/app/config.yaml")]
     config: PathBuf,
+    /// Token that serum issues for this proxy.
     #[arg(long, env = "SERUM_PROXY_TOKEN", hide_env_values = true)]
     token: String,
 }
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    println!(" serum proxy v{}", env!("CARGO_PKG_VERSION"));
-
     let cli = Cli::parse();
     let cfg = config::Config::load(&cli.config)
         .with_context(|| format!("loading config from {}", cli.config.display()))?;
     logging::init(&cfg.proxy.log_level);
 
     info!(
+        version = env!("CARGO_PKG_VERSION"),
         services = cfg.services.len(),
         admin_bind = %cfg.proxy.admin_bind,
         "config loaded"
