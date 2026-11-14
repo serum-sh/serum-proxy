@@ -79,7 +79,7 @@ The proxy runs in your network. serum sends requests to the proxy, the proxy sen
 What serum controls in a request:
 
 - The service `type`, the method, the path, the query parameters and the body. The [guardrails](#safety-guardrails) and the [allowlists](#built-in-allowlists) limit the method and the path.
-- The request headers. The proxy removes `Authorization` and forwards all other headers without change. The proxy adds the headers from its config after the headers from serum. If serum sends a header that the config also sets, the backend gets both values.
+- The `Accept` and `Content-Type` request headers. The proxy drops all other headers from serum. If the config sets one of these headers, the proxy uses the config value.
 
 What serum gets back:
 

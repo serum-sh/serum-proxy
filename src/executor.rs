@@ -1,6 +1,6 @@
 //! Execute one `RequestFrame` against a configured backend.
 //!
-//! Order: strip Authorization -> build URL (path check) -> admit (path, method,
+//! Order: filter request headers -> build URL (path check) -> admit (path, method,
 //! concurrency) -> outbound reqwest call -> stream response capped at 5 MB -> project one
 //! `RequestOutcome` into an egress entry and the returned `ResponseFrame`.
 
@@ -23,6 +23,7 @@ use crate::guardrails::Guardrails;
 
 pub const MAX_RESPONSE_BYTES: u64 = 5 * 1024 * 1024;
 pub const UPSTREAM_TIMEOUT: Duration = Duration::from_secs(15);
+const FORWARDED_HEADERS: [&str; 2] = ["accept", "content-type"];
 
 pub struct ResolvedService {
     pub config: ServiceConfig,
@@ -72,10 +73,16 @@ impl Executor {
     /// Run one inbound `RequestFrame` to a `ResponseFrame`: admit -> forward ->
     /// project one `RequestOutcome` into the egress row and the wire response.
     pub async fn execute(&self, mut req: RequestFrame, service: &ResolvedService) -> ResponseFrame {
-        // Drop incoming Authorization before any further work; auth attaches from
-        // local config (docs/protocol.md, request frame).
+        // The config value wins over a header from serum with the same name.
         if let Some(headers) = req.headers.as_mut() {
-            headers.retain(|k, _| !k.eq_ignore_ascii_case("authorization"));
+            headers.retain(|k, _| {
+                FORWARDED_HEADERS.iter().any(|h| k.eq_ignore_ascii_case(h))
+                    && !service
+                        .config
+                        .headers
+                        .keys()
+                        .any(|c| c.eq_ignore_ascii_case(k))
+            });
         }
 
         let span = info_span!(

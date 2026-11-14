@@ -62,7 +62,7 @@ Asks the proxy to make one HTTP call against a local backend.
 | `method` | `"GET"` \| `"POST"` | Closed set. Any other method is rejected. |
 | `path` | string | URL path only; no query string. |
 | `query` | object, optional | Map of name to a single value (string) or repeated values (array of strings). See "Query serialization". |
-| `headers` | object, optional | The proxy strips `Authorization` on receipt and never forwards it; auth attaches from the proxy's local config. |
+| `headers` | object, optional | The proxy forwards only `Accept` and `Content-Type` and drops all other headers, `Authorization` included; auth attaches from the proxy's local config. A config header replaces a header from serum with the same name. |
 | `body` | string, optional | UTF-8 only in v1. Binary is out of scope (would be added additively as `body_encoding`). |
 
 ### response (proxy -> serum)
