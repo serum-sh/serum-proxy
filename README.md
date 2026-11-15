@@ -4,6 +4,8 @@ Open-source, customer-deployed proxy for [serum](https://serum.sh). It lets seru
 
 The proxy holds one long-lived outbound WebSocket to the serum service. The service sends HTTP-shaped envelopes over the tunnel; the proxy runs them against locally-configured backends (Prometheus, Elasticsearch, Kubernetes, more...) and returns the responses. See [Trust model](#trust-model) for what serum can and cannot do through the proxy.
 
+The proxy connects to `proxy.serum.sh` on TCP port 443.
+
 Wire contract (envelope spec and shared protocol vectors): [`docs/protocol.md`](docs/protocol.md).
 
 ## Quick start

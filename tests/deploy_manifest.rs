@@ -29,8 +29,7 @@ services:
 "#;
 
 /// The least a renderer can emit: every optional setting left to its default.
-const MINIMAL_CONFIG: &str = r#"proxy:
-  serum_wss_url: "wss://gateway.example.com/v1/proxy"
+const MINIMAL_CONFIG: &str = r#"proxy: {}
 
 services: []
 "#;

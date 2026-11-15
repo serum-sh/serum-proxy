@@ -37,6 +37,7 @@ async fn main() -> anyhow::Result<()> {
         version = env!("CARGO_PKG_VERSION"),
         services = cfg.services.len(),
         admin_bind = %cfg.proxy.admin_bind,
+        serum_wss_url = %cfg.proxy.serum_wss_url,
         "config loaded"
     );
 

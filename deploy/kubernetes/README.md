@@ -65,7 +65,7 @@ kubectl delete clusterrole,clusterrolebinding -l app.kubernetes.io/name=serum-pr
 ## Notes for operators
 
 - The proxy dials out and never accepts inbound connections, so there is no
-  Service and no Ingress. It needs outbound TCP 443 to the serum gateway;
+  Service and no Ingress. It needs outbound TCP 443 to `proxy.serum.sh`;
   clusters with a default-deny egress policy need an allowance for it. The
   connection does not honor `HTTPS_PROXY`.
 - The ConfigMap is mounted with `subPath`, so an edit to it does not reach a
@@ -75,7 +75,7 @@ kubectl delete clusterrole,clusterrolebinding -l app.kubernetes.io/name=serum-pr
   and no privilege escalation.
 - `GET /healthz` on port 8088 reports connection state and always answers 200,
   so the liveness probe restarts a wedged process without cycling the pod
-  during a gateway outage. Port-forward it to see connection state.
+  during a serum outage. Port-forward it to see connection state.
 - The RBAC grant is read-only and enumerated: `get` and `list` on pods and
   events. Secrets and ConfigMaps are not named, so they cannot be read through
   this ServiceAccount.

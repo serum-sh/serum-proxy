@@ -11,6 +11,7 @@ use thiserror::Error;
 // Loopback so a config that says nothing keeps the admin port off-box.
 const DEFAULT_ADMIN_BIND: &str = "127.0.0.1:8088";
 const ADMIN_BIND_ENV: &str = "SERUM_ADMIN_BIND";
+const DEFAULT_SERUM_WSS_URL: &str = "wss://proxy.serum.sh/v1/proxy";
 const DEFAULT_RECONNECT_MAX_SECS: u64 = 60;
 const DEFAULT_MAX_CONCURRENT: usize = 10;
 const DEFAULT_LOG_LEVEL: &str = "INFO";
@@ -41,6 +42,7 @@ pub struct Config {
 #[derive(Debug, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ProxySettings {
+    #[serde(default = "default_serum_wss_url")]
     pub serum_wss_url: String,
     #[serde(default = "default_log_level")]
     pub log_level: String,
@@ -91,6 +93,9 @@ pub struct ServiceConfig {
     pub auth_token_file: Option<String>,
 }
 
+fn default_serum_wss_url() -> String {
+    DEFAULT_SERUM_WSS_URL.into()
+}
 fn default_log_level() -> String {
     DEFAULT_LOG_LEVEL.into()
 }

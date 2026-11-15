@@ -6,13 +6,9 @@
 # a missing var aborts the proxy.
 
 proxy:
-  serum_wss_url: "wss://gateway.example.com/v1/proxy"
   log_level: "INFO"
   # admin_bind: "127.0.0.1:8088"
   reconnect_max_backoff_secs: 60
-  # Permit a ws:// (no TLS) `serum_wss_url`. Off by default, and serum will not serve non-TLS.
-  # Convenience for dev in local or docker network.
-  allow_insecure_ws: false
 
 services:
   - type: "prometheus"

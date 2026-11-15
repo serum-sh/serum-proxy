@@ -82,6 +82,17 @@ services: []
 }
 
 #[test]
+fn serum_wss_url_defaults_to_serum_proxy_host() {
+    let yaml = r#"
+proxy: {}
+services: []
+"#;
+    let env: HashMap<&str, &str> = HashMap::new();
+    let cfg = Config::from_yaml_str(yaml, lookup(&env)).expect("config loads");
+    assert_eq!(cfg.proxy.serum_wss_url, "wss://proxy.serum.sh/v1/proxy");
+}
+
+#[test]
 fn rejects_non_wss_url() {
     let yaml = r#"
 proxy:
