@@ -12,7 +12,7 @@ Wire contract (envelope spec and shared protocol vectors): [`docs/protocol.md`](
 
 ### Public Container Image
 
-Replace `<public-image>` with the public image path (TBD).
+The image is `ghcr.io/serum-sh/serum-proxy:0.1.0` (linux/amd64 and linux/arm64).
 
 1. Copy `config.example.yaml` to `config.yaml` and edit the `services` section to point at your internal Prometheus / Elasticsearch.
 
@@ -36,7 +36,7 @@ Replace `<public-image>` with the public image path (TBD).
      -e ES_TOKEN \
      -v "$PWD/config.yaml:/app/config.yaml:ro" \
      -p 127.0.0.1:8088:8088 \
-     <public-image>
+     ghcr.io/serum-sh/serum-proxy:0.1.0
    ```
 
 4. Confirm it is connected:
@@ -53,7 +53,7 @@ Build the image:
 docker build -t serum-proxy:dev .
 ```
 
-Then do the steps in [Public Container Image](#public-container-image), with `serum-proxy:dev` in place of `<public-image>`.
+Then do the steps in [Public Container Image](#public-container-image), with `serum-proxy:dev` in place of `ghcr.io/serum-sh/serum-proxy:0.1.0`.
 
 ## Operator endpoints
 
